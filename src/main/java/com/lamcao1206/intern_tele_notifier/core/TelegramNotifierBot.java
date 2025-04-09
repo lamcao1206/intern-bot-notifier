@@ -17,12 +17,12 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Slf4j
 @Component
-public class TrackerBot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+public class TelegramNotifierBot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
     private final TelegramBotConfiguration telegramBotConfiguration;
     private final TelegramClient telegramClient;
     
     @Autowired
-    public TrackerBot(TelegramBotConfiguration telegramBotConfiguration) {
+    public TelegramNotifierBot(TelegramBotConfiguration telegramBotConfiguration) {
         this.telegramBotConfiguration = telegramBotConfiguration;
         this.telegramClient = new OkHttpTelegramClient(getBotToken());
     }
@@ -43,8 +43,16 @@ public class TrackerBot implements SpringLongPollingBot, LongPollingSingleThread
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             String chatId = update.getMessage().getChatId().toString();
-            sendMessage(chatId, messageText);
+            if (messageText.equals("/start")) {
+                sendMessage(chatId, "DOM Tracker Bot started! I'll notify you of changes to job entries.");
+            } else if (messageText.equals("/stop")) {
+                sendMessage(chatId, "Monitoring stopped.");
+            }
         }
+    }
+    
+    public void sendNotification(String text) {
+        sendMessage(telegramBotConfiguration.getChatId(), text);
     }
     
     public void sendMessage(String chatId, String text) {
