@@ -94,6 +94,7 @@ public class TelegramNotifierBot implements SpringLongPollingBot, LongPollingSin
             isMonitoring = false;
             sendNotification("Job tracking stopped...");
             log.info("Job tracking stopped on chatId {}", telegramBotConfiguration.getChatId());
+            jobTrackingService.previousLogoBoxCount = -1;
         } else {
             sendNotification("Job tracking is not running");
             log.info("Attempted to stop job tracking, but it’s not running");
@@ -108,7 +109,8 @@ public class TelegramNotifierBot implements SpringLongPollingBot, LongPollingSin
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text(text)
+                .text(text + " @Lam")
+                .disableNotification(false)
                 .build();
         try {
             telegramClient.execute(message);

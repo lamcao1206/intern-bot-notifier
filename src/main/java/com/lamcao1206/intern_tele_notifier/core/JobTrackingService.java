@@ -1,6 +1,7 @@
 package com.lamcao1206.intern_tele_notifier.core;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -21,8 +22,10 @@ public class JobTrackingService {
     @Value("${target.url}")
     private String targetUrl;
     
-    private int previousLogoBoxCount = -1;
+    public int previousLogoBoxCount = -1;
     private final WebDriver driver;
+    
+    
 
     public JobTrackingService() {
         WebDriverManager.chromedriver().setup();
