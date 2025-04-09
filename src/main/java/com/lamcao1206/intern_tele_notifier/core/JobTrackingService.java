@@ -8,9 +8,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -20,12 +18,9 @@ import java.time.Duration;
 @Service
 public class JobTrackingService {
 
-    @Autowired
-    private TelegramNotifierBot bot;
-
     @Value("${target.url}")
     private String targetUrl;
-
+    
     private int previousLogoBoxCount = -1;
     private final WebDriver driver;
 
@@ -39,42 +34,41 @@ public class JobTrackingService {
         this.driver = new ChromeDriver(options);
     }
 
-    @Scheduled(fixedRate = 30000) 
-    public void checkDomChanges() {
+    public String checkDomChanges() {
         try {
             driver.get(targetUrl);
-            
+
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
             wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.logo-box")));
-            
+
             int currentLogoBoxCount = driver.findElements(By.cssSelector("div.logo-box")).size();
-            
+
+            String message = null;
             if (previousLogoBoxCount == -1) {
-                String initialMessage = "Initial load: Found " + currentLogoBoxCount + " job entries (logo-box elements) on " + targetUrl;
-                bot.sendNotification(initialMessage);
-                log.info(initialMessage);
+                message = "Initial load: Found " + currentLogoBoxCount + " job entries (logo-box elements) on " + targetUrl;
+                log.info(message);
             } else if (currentLogoBoxCount != previousLogoBoxCount) {
-                String changeMessage = "Job entries changed on " + targetUrl + "!\n" +
+                message = "Job entries changed on " + targetUrl + "!\n" +
                         "Previous count: " + previousLogoBoxCount + "\n" +
                         "Current count: " + currentLogoBoxCount + "\n" +
                         (currentLogoBoxCount > previousLogoBoxCount ?
                                 "Added: " + (currentLogoBoxCount - previousLogoBoxCount) + " new job(s)" :
                                 "Removed: " + (previousLogoBoxCount - currentLogoBoxCount) + " job(s)");
-                bot.sendNotification(changeMessage);
-                log.info(changeMessage);
+                log.info(message);
             } else {
                 log.debug("No change in job entries: {} logo-box elements", currentLogoBoxCount);
             }
-            
+
             previousLogoBoxCount = currentLogoBoxCount;
+            return message;
 
         } catch (Exception e) {
             String errorMessage = "Error monitoring " + targetUrl + ": " + e.getMessage();
-            bot.sendNotification(errorMessage);
             log.error(errorMessage, e);
+            return errorMessage;
         }
     }
-
+    
     @PreDestroy
     public void cleanup() {
         if (driver != null) {
