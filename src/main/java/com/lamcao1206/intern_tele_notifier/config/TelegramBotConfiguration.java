@@ -33,6 +33,6 @@ public class TelegramBotConfiguration {
         JsonNode jsonNode = objectMapper.readTree(credentialsResource.getInputStream());
         this.username = jsonNode.get("telegrambot").get("username").asText();
         this.token = jsonNode.get("telegrambot").get("token").asText();
-        this.chatId = jsonNode.get("chatId").asText();
+        this.chatId = jsonNode.get("telegrambot").get("chatId").asText();
     }
 }
